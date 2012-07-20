@@ -2947,6 +2947,11 @@ function forum_get_course_forum($courseid, $type) {
         // There should always only be ONE, but with the right combination of
         // errors there might be more.  In this case, just return the oldest one (lowest ID).
         foreach ($forums as $forum) {
+            # fix MDL-34439 issue
+            if ($forum->type == "news" && $courseid == SITEID) {
+                $forum->name  = get_string("sitenews");
+                $forum->intro = get_string("intronews", "forum");
+             }
             return $forum;   // ie the first one
         }
     }
