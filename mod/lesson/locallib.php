@@ -2691,21 +2691,30 @@ class lesson_page_type_manager {
         }
 
         $orderedpages = array();
-        $lastpageid = 0;
-
-        while (true) {
-            foreach ($pages as $page) {
-                if ((int)$page->prevpageid === (int)$lastpageid) {
-                    $orderedpages[$page->id] = $page;
-                    unset($pages[$page->id]);
-                    $lastpageid = $page->id;
-                    if ((int)$page->nextpageid===0) {
-                        break 2;
-                    } else {
-                        break 1;
-                    }
-                }
-            }
+        
+        /**
+         * @see http://tracker.moodle.org/browse/MDL-36533
+         */
+        $sorted = false;
+        reset($pages);
+        // look for the first node
+        $current = current($pages);
+        while ((int)$current->prevpageid !== 0) {
+            $current = next($pages);
+        }
+        // add it first in ordered stack
+        $orderedpages[$current->id] = $current;
+        // prevent falling down in an infinite loop (just in case)
+        $counter = 0;
+        $limit = count($pages);
+        // sort others    
+        while(!$sorted) {
+            $current = $pages[$current->nextpageid];
+            $orderedpages[$current->id] = $current;
+            $sorted = (int)$current->nextpageid === 0 || (int)$counter >= $limit;
+        } 
+        if ($counter >= $limit) {
+            array_pop($orderedpages);
         }
 
         return $orderedpages;
